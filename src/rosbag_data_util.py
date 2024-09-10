@@ -11,7 +11,7 @@ from rosbag import Bag
 from pathlib import Path
 
 # The following import is temporary for coding purpose, change if there is error
-from rosbag_read_utils.src.rosbag_read_utils.Rosbag_Reader import RosbagReader
+from rosbag_read_utils.Rosbag_Reader import RosbagReader
 
 
 class FormatConverter:
@@ -20,32 +20,40 @@ class FormatConverter:
 
 
 def read_observations(obs_topic: str, rosbag: Bag):
-    obs = pd.DataFrame(columns=["timestamp"] + [f"pose_{i}" for i in {"x", "y", "z"}])
+    obs = pd.DataFrame(columns=["timestamp"] + [f"joint_{i}" for i in range(7)])
 
     # initialise progress bar
     pbar = tqdm(total=rosbag.get_message_count())
 
     for topic, msg, ts in rosbag.read_messages(obs_topic):
         pbar.update(1)
-        timestamp = pd.to_datetime(ts.to_sec(), unit="s")
-        obs.loc[len(obs)] = [timestamp] + [msg.x, msg.y, msg.z, msg.a, ] # ! don't know what these will be yet
-
-        # return the first 5 rows
-        obs.head()
+        timestamp = pd.to_datetime(ts.to_nsec(), unit="ns")
+        obs.loc[len(obs)] = [timestamp] + [msg.position[0],
+                                           msg.position[1],
+                                           msg.position[2],
+                                           msg.position[3],
+                                           msg.position[4],
+                                           msg.position[5],
+                                           msg.position[6]] 
+    # return the first 5 rows
+    obs.head()
 
     return obs
 
 
 def read_and_sync_image(obs: pd.DataFrame ,img_dir: str, img_topic: str, rosbag: Bag, bag_reader: RosbagReader):
     cv_image = []
+    pbar = tqdm(total=rosbag.get_message_count())
+
     for idx, row in obs.iterrows():
+        pbar.update(1)
         image = bag_reader.find_closest_image(rosbag, img_dir, img_topic, row["timestamp"])
         cv_image.append(image)
     return cv_image
 
 
 def main():
-    ROS_BAG_PATH = Path(__file__).parent / "../rosbag/2024-09-10-15-28-22.bag"
+    ROS_BAG_PATH = Path(__file__).parent / "../rosbag/2024-09-10-17-09-22.bag"
     IMG_DIR = Path(__file__).parent / "../image_data"
     OBS_TOPIC = "/left_arm/joint_states"
     IMG_TOPIC = "/left_arm_camera/color/image_rect_color"

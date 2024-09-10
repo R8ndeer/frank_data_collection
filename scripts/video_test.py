@@ -48,7 +48,7 @@ if __name__ == '__main__':
         rospy.init_node('rosbag_video_player', anonymous=True)
 
         # Path to the ROS bag file
-        bag_path = Path(__file__).parent / "../rosbag/2024-09-10-15-28-22.bag"  # Replace with the actual path to your bag file
+        bag_path = Path(__file__).parent / "../rosbag/2024-09-10-16-51-40.bag"  # Replace with the actual path to your bag file
         
         # Topic name where the video (Image messages) is recorded
         topic_name = "/left_arm_camera/color/image_rect_color"  # Replace with the actual topic name in the bag file
